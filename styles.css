@@ -1033,16 +1033,18 @@ select:focus {
   margin-bottom: 18px;
 }
 
-.invitation h1 {
-  margin: 14px 0 8px;
-  font-size: clamp(27px, 4vw, 35px);
+.detail-game-name {
+  margin: 8px 0 8px;
+  color: #171927;
+  font-size: clamp(36px, 5vw, 50px);
   line-height: 1.35;
   letter-spacing: 0;
 }
 
-.game-pill--large {
-  padding: 7px 11px;
-  font-size: 13px;
+.detail-title {
+  color: #5c6270;
+  font-size: 19px;
+  font-weight: 800;
 }
 
 .invite-meta {
@@ -1064,10 +1066,16 @@ select:focus {
 }
 
 .date-chip {
+  gap: 8px;
   border: 1px solid #d8ccff;
   color: #3d3368;
   background: #fff;
   font-size: 16px;
+}
+
+.date-chip b {
+  color: #5134c7;
+  font-size: 13px;
 }
 
 .host-chip {

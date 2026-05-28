@@ -25,6 +25,27 @@ const defaultCopy = {
   footerSlogan: "友善玩樂，心平氣和",
 };
 
+const gameGroups = [
+  {
+    label: "手機",
+    options: [
+      "Pastale (追殺蠟筆)",
+      "Family Style (合作煮飯)",
+      "WePlay-動次打次拳",
+      "WePlay-誰是臥底",
+      "WePlay-你話我猜",
+    ],
+  },
+  {
+    label: "電腦",
+    options: ["Steam-猛獸派對", "Steam-PICO PARK (貓咪合作吵架)", "Steam-煙雲十六聲", "Steam-煮過頭"],
+  },
+  {
+    label: "Switch",
+    options: ["Switch-煮過頭"],
+  },
+];
+
 const seedInvites = [
   {
     id: "pastabe-tonight",
@@ -223,6 +244,26 @@ function normalizeSiteCopy(copy) {
     next.heroText = defaultCopy.heroText;
   }
   return next;
+}
+
+function gameOptionsHtml(selected = "") {
+  return gameGroups
+    .map(
+      (group) => `
+        <optgroup label="${escapeAttribute(group.label)}">
+          ${group.options
+            .map(
+              (option) =>
+                `<option value="${escapeAttribute(option)}" ${option === selected ? "selected" : ""}>${escapeHtml(option)}</option>`
+            )
+            .join("")}
+        </optgroup>`
+    )
+    .join("");
+}
+
+function isKnownGame(value) {
+  return gameGroups.some((group) => group.options.includes(value));
 }
 
 function supabaseHeaders() {
@@ -807,6 +848,7 @@ function renderNew() {
   useTemplate("new-template");
   const form = document.querySelector("#create-form");
   const date = document.querySelector("#event-date");
+  document.querySelector("#game-select").innerHTML = gameOptionsHtml();
 
   date.value = todayIso();
   date.min = todayIso();
@@ -962,10 +1004,10 @@ function drawInvitation(invite) {
   article.innerHTML = `
     <div class="invitation__top">
       <div>
-        <span class="game-pill game-pill--large">${escapeHtml(invite.game)}</span>
-        <h1>${escapeHtml(invite.title)}</h1>
+        <h1 class="detail-game-name">${escapeHtml(invite.game)}</h1>
+        <div class="detail-title">${escapeHtml(invite.title)}</div>
         <div class="invite-meta">
-          <span class="date-chip">${formatDateBadge(invite.date)}</span>
+          <span class="date-chip"><b>揪團日期</b>${formatDateBadge(invite.date)}</span>
           <span class="host-chip"><b>團主大人</b>${escapeHtml(invite.host)}</span>
         </div>
       </div>
@@ -1010,7 +1052,15 @@ function renderAdminPanel(invite) {
         </label>
         <label class="field">
           <span>遊戲 / 活動</span>
-          <input name="game" required maxlength="40" value="${escapeAttribute(invite.game)}" />
+          <span class="select-wrap">
+            <select name="game">
+              ${gameOptionsHtml(isKnownGame(invite.game) ? invite.game : "")}
+            </select>
+          </span>
+        </label>
+        <label class="field">
+          <span>清單沒有才填</span>
+          <input name="customGame" maxlength="40" value="${isKnownGame(invite.game) ? "" : escapeAttribute(invite.game)}" placeholder="例如羽球、桌遊、唱歌" />
         </label>
         <label class="field">
           <span>日期</span>
@@ -1051,7 +1101,7 @@ function bindAdminTools(invites, invite) {
     Object.assign(invite, {
       title: data.get("title").trim(),
       host: data.get("host").trim(),
-      game: data.get("game").trim(),
+      game: data.get("customGame").trim() || data.get("game").trim(),
       date: data.get("date"),
       slots: nextSlots,
       note: data.get("note").trim(),
