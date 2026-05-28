@@ -358,6 +358,8 @@ function setupAdminButton() {
       button.classList.remove("is-active");
       label?.classList.remove("is-visible");
       logoUpload?.classList.remove("is-visible");
+      disableInlineCopyEditing();
+      applySiteCopy();
       showToast("已離開管理模式");
       route();
       return;
@@ -519,6 +521,16 @@ function enableInlineCopyEditing() {
       setDraftCopy({ ...draftCopy, [key]: value });
       showToast("已暫存，記得按儲存");
     });
+  });
+}
+
+function disableInlineCopyEditing() {
+  document.querySelectorAll("[data-copy]").forEach((node) => {
+    node.classList.remove("inline-editable");
+    node.removeAttribute("contenteditable");
+    node.removeAttribute("spellcheck");
+    node.removeAttribute("title");
+    delete node.dataset.inlineReady;
   });
 }
 
