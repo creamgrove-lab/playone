@@ -110,7 +110,7 @@ button {
 .nav {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 16px;
 }
 
 .nav__link {
@@ -121,6 +121,33 @@ button {
 .nav__link:hover,
 .back-link:hover {
   color: var(--purple);
+}
+
+.admin-trigger {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: #656a78;
+  background: #fff;
+}
+
+.admin-trigger svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.admin-trigger.is-active {
+  color: #fff;
+  border-color: var(--purple);
+  background: var(--purple);
 }
 
 .app {
@@ -487,6 +514,31 @@ button {
   font-weight: 500;
 }
 
+.status-badge {
+  padding: 5px 9px;
+  border-radius: 8px;
+  color: #606575;
+  background: #f3f3f6;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status-badge--rank-0 {
+  color: #fff;
+  background: var(--purple);
+}
+
+.status-badge--rank-1 {
+  color: #5134c7;
+  background: #e8e0ff;
+}
+
+.status-badge--rank-2 {
+  color: #9b3357;
+  background: #ffe2eb;
+}
+
 .invite-card h3 {
   min-height: 57px;
   margin: 0 0 17px;
@@ -636,6 +688,12 @@ button {
   font-weight: 500;
 }
 
+.field-hint {
+  margin-top: -3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .field b,
 .slot-field b {
   color: var(--pink);
@@ -693,10 +751,6 @@ textarea:focus,
 select:focus {
   border-color: #967cff;
   box-shadow: 0 0 0 3px rgba(107, 69, 255, 0.11);
-}
-
-.field--hidden {
-  display: none;
 }
 
 .slot-field {
@@ -780,6 +834,21 @@ select:focus {
 
 .invitation {
   padding: 30px;
+  border-color: #e5ddff;
+  background: #fbf9ff;
+}
+
+.invitation::before,
+.join-card::before {
+  display: block;
+  margin-bottom: 18px;
+  color: #565b6b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.invitation::before {
+  content: "揪團資訊";
 }
 
 .invitation__top {
@@ -796,8 +865,50 @@ select:focus {
   letter-spacing: 0;
 }
 
-.invitation__meta {
-  color: var(--muted);
+.game-pill--large {
+  padding: 7px 11px;
+  font-size: 13px;
+}
+
+.invite-meta {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.date-chip,
+.host-chip {
+  min-height: 42px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.date-chip {
+  border: 1px solid #d8ccff;
+  color: #3d3368;
+  background: #fff;
+  font-size: 16px;
+}
+
+.host-chip {
+  gap: 9px;
+  border: 1px solid #eadfff;
+  color: #4b4f5f;
+  background: #f5f1ff;
+  font-size: 14px;
+}
+
+.host-chip b {
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: #5134c7;
+  background: #e8e0ff;
+  font-size: 12px;
 }
 
 .share {
@@ -863,22 +974,82 @@ select:focus {
 
 .person {
   margin-top: 10px;
-  padding: 12px 14px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 7px;
   border-radius: 8px;
-  background: #fbfafc;
+  border: 1px solid #eeeaf6;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(46, 37, 92, 0.035);
   font-size: 14px;
 }
 
-.person strong {
-  margin-right: 8px;
+.person__main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.person__delete {
+  min-height: 28px;
+  margin-left: auto;
+  padding: 0 10px;
+  border: 1px solid #ffd7e3;
+  border-radius: 8px;
+  color: #b72c55;
+  background: #fff5f8;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .person span {
   color: var(--muted);
 }
 
+.person--host {
+  border: 1px solid #dccfff;
+  background: #f8f5ff;
+}
+
+.host-badge {
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: #5134c7;
+  background: #e8e0ff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .join-card {
   padding: 28px;
+  border-color: var(--purple-dark);
+  color: #fff;
+  background: var(--purple);
+  box-shadow: 0 18px 36px rgba(77, 45, 222, 0.2);
+}
+
+.join-card::before {
+  content: "朋友加入";
+  color: #efeaff;
+}
+
+.join-card input,
+.join-card textarea {
+  border-color: transparent;
+  background: #fff;
+}
+
+.join-card .slot-choice span {
+  border-color: rgba(255, 255, 255, 0.36);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.join-card .slot-choice input:checked + span {
+  border-color: #fff;
+  color: var(--purple);
+  background: #fff;
 }
 
 .join-card h2 {
@@ -886,10 +1057,67 @@ select:focus {
   font-size: 26px;
 }
 
+.join-card .field span,
+.join-card .slot-field legend {
+  color: #efeaff;
+}
+
+.join-card .field b,
+.join-card .slot-field b {
+  color: #ffd7e3;
+}
+
 .join-card form {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.join-card .button--primary {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: #2f1a8f;
+  box-shadow: 0 14px 24px rgba(31, 18, 92, 0.28);
+}
+
+.join-card .button--primary:hover {
+  background: #24116f;
+}
+
+.admin-panel {
+  margin-top: 28px;
+  padding: 20px;
+  border: 1px solid #e4ddff;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.admin-panel__head {
+  margin-bottom: 18px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-panel h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.admin-delete {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid #ffd2df;
+  border-radius: 8px;
+  color: #b72c55;
+  background: #fff3f7;
+  font-weight: 800;
+}
+
+.admin-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
 }
 
 .toast {
@@ -1048,6 +1276,10 @@ select:focus {
   }
 
   .create-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-form {
     grid-template-columns: 1fr;
   }
 

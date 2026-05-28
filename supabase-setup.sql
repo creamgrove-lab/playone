@@ -27,3 +27,8 @@ on public.play_one_invites
 for update
 using (true)
 with check (true);
+
+create policy "Anyone can delete play one invites"
+on public.play_one_invites
+for delete
+using (true);

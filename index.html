@@ -31,6 +31,12 @@
       </a>
       <nav class="nav" aria-label="主要導覽">
         <a class="nav__link" href="#/">大廳</a>
+        <button class="admin-trigger" id="admin-button" type="button" title="管理模式" aria-label="管理模式">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" />
+            <path d="M19.4 15a7.8 7.8 0 0 0 .06-1 7.8 7.8 0 0 0-.06-1l2.02-1.58-1.9-3.28-2.38.96a7.9 7.9 0 0 0-1.73-1L15.05 5h-3.8l-.36 3.1a7.9 7.9 0 0 0-1.73 1l-2.38-.96-1.9 3.28L6.9 13a7.8 7.8 0 0 0-.06 1c0 .34.02.68.06 1l-2.02 1.58 1.9 3.28 2.38-.96c.53.42 1.11.76 1.73 1l.36 3.1h3.8l.36-3.1c.62-.24 1.2-.58 1.73-1l2.38.96 1.9-3.28L19.4 15Z" />
+          </svg>
+        </button>
         <a class="button button--primary button--small" href="#/new">+ 開新團</a>
       </nav>
     </header>
@@ -48,7 +54,7 @@
         <div class="hero__copy">
           <span class="eyebrow">PLAY INVITATION</span>
           <h1>今天玩什麼，<span>一眼就知道。</span></h1>
-          <p>開團、選時段、收朋友回覆。大廳會整理今晚即將開始的團，也會把重複率最高的時段一起排出來。</p>
+          <p>開團、選時段、收朋友回覆。大廳會依台灣時間把現在可加入、快開始、今晚稍晚的團排好。</p>
           <div class="hero__actions">
             <a class="button button--primary" href="#/new">開一個新團</a>
             <a class="button button--ghost" href="#invites">看目前揪團</a>
@@ -111,26 +117,36 @@
             <input name="title" required maxlength="50" value="今晚有人要一起玩嗎？" />
           </label>
           <label class="field">
-            <span>開團的人 <b>*</b></span>
+            <span>團主大人 <b>*</b></span>
             <input name="host" required maxlength="18" placeholder="你的暱稱" />
           </label>
           <label class="field">
-            <span>遊戲 <b>*</b></span>
+            <span>常用遊戲 / 活動</span>
             <span class="select-wrap">
-              <select name="game" id="game-select" required>
-                <option value="" disabled selected>選一款遊戲</option>
-                <option value="pastabe">pastabe</option>
-                <option value="英雄聯盟">英雄聯盟</option>
-                <option value="Pokemon Unite">Pokemon Unite</option>
-                <option value="雀魂">雀魂</option>
-                <option value="Valorant">Valorant</option>
-                <option value="其他">其他遊戲</option>
+              <select name="game" id="game-select">
+                <optgroup label="手機">
+                  <option value="Pastale (追殺蠟筆)">Pastale (追殺蠟筆)</option>
+                  <option value="Family Style (合作煮飯)">Family Style (合作煮飯)</option>
+                  <option value="WePlay-動次打次拳">WePlay-動次打次拳</option>
+                  <option value="WePlay-誰是臥底">WePlay-誰是臥底</option>
+                  <option value="WePlay-你話我猜">WePlay-你話我猜</option>
+                </optgroup>
+                <optgroup label="電腦">
+                  <option value="Steam-猛獸派對">Steam-猛獸派對</option>
+                  <option value="Steam-PICO PARK (貓咪合作吵架)">Steam-PICO PARK (貓咪合作吵架)</option>
+                  <option value="Steam-煙雲十六聲">Steam-煙雲十六聲</option>
+                  <option value="Steam-煮過頭">Steam-煮過頭</option>
+                </optgroup>
+                <optgroup label="Switch">
+                  <option value="Switch-煮過頭">煮過頭</option>
+                </optgroup>
               </select>
             </span>
           </label>
-          <label class="field field--hidden" id="custom-game-field">
-            <span>其他遊戲名稱 <b>*</b></span>
-            <input name="customGame" maxlength="24" placeholder="輸入遊戲名稱" />
+          <label class="field" id="custom-game-field">
+            <span>清單沒有才填</span>
+            <input name="customGame" maxlength="24" placeholder="例如羽球、桌遊、唱歌" />
+            <small class="field-hint">上面選單找不到要揪的遊戲或活動時，再填這格</small>
           </label>
           <label class="field field--full">
             <span>日期 <b>*</b></span>
@@ -165,7 +181,6 @@
         <div class="detail-layout">
           <article class="invitation card" id="invitation"></article>
           <section class="join-card card">
-            <span class="eyebrow">JOIN THIS PLAY</span>
             <h2>加入這團</h2>
             <form id="join-form">
               <label class="field field--full">
