@@ -141,9 +141,8 @@ const store = {
   },
 
   async remove(id) {
-    localSave(localList().filter((entry) => entry.id !== id));
-
     if (!remoteEnabled) {
+      localSave(localList().filter((entry) => entry.id !== id));
       return;
     }
 
@@ -152,6 +151,7 @@ const store = {
       headers: supabaseHeaders(),
     });
     if (!response.ok) throw new Error("Supabase delete failed");
+    localSave(localList().filter((entry) => entry.id !== id));
   },
 };
 
@@ -733,6 +733,19 @@ function renderCards(invites, filter) {
         <article class="invite-card ${status.rank >= 4 ? "invite-card--expired" : ""}">
           <div class="invite-card__top">
             <span class="status-badge status-badge--rank-${status.rank}">${escapeHtml(status.label)}</span>
+            ${
+              adminMode
+                ? `<button class="card-delete" type="button" data-delete-invite="${escapeAttribute(invite.id)}" aria-label="刪除 ${escapeAttribute(invite.title)}">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 7h16" />
+                      <path d="M10 11v6" />
+                      <path d="M14 11v6" />
+                      <path d="M6 7l1 14h10l1-14" />
+                      <path d="M9 7V4h6v3" />
+                    </svg>
+                  </button>`
+                : ""
+            }
           </div>
           <div class="date-badge">${formatDate(invite.date)}</div>
           <div class="card-game-name">${escapeHtml(invite.game)}</div>
@@ -762,6 +775,32 @@ function renderCards(invites, filter) {
       `;
     })
     .join("");
+  bindLobbyDeleteButtons(invites);
+}
+
+function bindLobbyDeleteButtons(invites) {
+  if (!adminMode) return;
+
+  document.querySelectorAll("[data-delete-invite]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const id = button.dataset.deleteInvite;
+      const invite = invites.find((entry) => entry.id === id);
+      if (!invite || !confirm(`確定要刪除「${invite.title}」嗎？`)) return;
+
+      button.disabled = true;
+      try {
+        await store.remove(invite.id);
+        const nextInvites = invites.filter((entry) => entry.id !== invite.id);
+        renderTonight(nextInvites);
+        renderCards(nextInvites, activeLobbyFilter);
+        showToast("揪團已刪除");
+      } catch (error) {
+        console.error(error);
+        button.disabled = false;
+        showToast("刪除失敗，請確認 Supabase 刪除權限已開啟");
+      }
+    });
+  });
 }
 
 function renderNew() {
@@ -1034,11 +1073,7 @@ function bindAdminTools(invites, invite) {
   });
 
   document.querySelector("#delete-invite")?.addEventListener("click", async () => {
-    const typed = prompt(`這會刪除「${invite.title}」整個揪團，不能復原。\n請輸入「刪除」才會繼續。`);
-    if (typed !== "刪除") {
-      showToast("已取消刪除");
-      return;
-    }
+    if (!confirm(`確定要刪除「${invite.title}」整個揪團嗎？`)) return;
 
     try {
       await store.remove(invite.id);

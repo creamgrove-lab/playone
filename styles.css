@@ -603,6 +603,37 @@ button {
   margin-bottom: 21px;
 }
 
+.card-delete {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ffd2df;
+  border-radius: 8px;
+  color: #b72c55;
+  background: #fff3f7;
+}
+
+.card-delete:hover {
+  color: #fff;
+  background: #d23f69;
+}
+
+.card-delete:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.card-delete svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
 .game-pill {
   padding: 5px 12px;
   border-radius: 8px;
@@ -1376,13 +1407,14 @@ select:focus {
   }
 
   .nav {
-    flex: 1 1 100%;
-    justify-content: space-between;
+    flex: 0 0 auto;
+    margin-left: auto;
+    justify-content: flex-end;
     gap: 8px;
   }
 
   .nav-tools {
-    flex: 1;
+    flex: 0 0 auto;
     padding: 4px;
     justify-content: flex-end;
     overflow-x: auto;
