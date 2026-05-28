@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Play One?! - 發起手遊邀約，快速找到大家都有空的遊戲時間。"
+      content="Play One?! 是一個讓朋友快速揪團、選時段、看誰能加入的小工具。"
     />
-    <title>Play One?! | 找朋友開玩</title>
+    <title>Play One?! | 揪團大廳</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -20,24 +20,25 @@
   <body>
     <div class="glow glow--one"></div>
     <div class="glow glow--two"></div>
+
     <header class="topbar">
       <a class="brand" href="#/">
         <span class="brand__icon" aria-hidden="true">P1</span>
         <span>
           <strong>Play One?!</strong>
-          <small>找朋友一起開玩</small>
+          <small>朋友揪團時間板</small>
         </span>
       </a>
-      <nav class="nav" aria-label="主選單">
-        <a class="nav__link" href="#/">揪團大廳</a>
-        <a class="button button--primary button--small" href="#/new">+ 發起邀約</a>
+      <nav class="nav" aria-label="主要導覽">
+        <a class="nav__link" href="#/">大廳</a>
+        <a class="button button--primary button--small" href="#/new">+ 開新團</a>
       </nav>
     </header>
 
     <main id="app" class="app" aria-live="polite"></main>
 
     <footer class="footer">
-      <p>Play One?! demo version <span aria-hidden="true">/</span> 先約時間，再開遊戲</p>
+      <p>Play One?! demo version <span aria-hidden="true">/</span> 目前可接 Supabase 雲端同步</p>
     </footer>
 
     <div id="toast" class="toast" role="status" aria-live="assertive"></div>
@@ -46,37 +47,44 @@
       <section class="hero">
         <div class="hero__copy">
           <span class="eyebrow">PLAY INVITATION</span>
-          <h1>今晚，<span>跟我玩嗎？</span></h1>
-          <p>發起一場遊戲邀約，朋友勾選能玩的時間，一眼找到最適合的開局時段。</p>
+          <h1>今天玩什麼，<span>一眼就知道。</span></h1>
+          <p>開團、選時段、收朋友回覆。大廳會整理今晚即將開始的團，也會把重複率最高的時段一起排出來。</p>
           <div class="hero__actions">
-            <a class="button button--primary" href="#/new">發起 Play 邀約</a>
-            <a class="button button--ghost" href="#invites">看看最近邀約</a>
+            <a class="button button--primary" href="#/new">開一個新團</a>
+            <a class="button button--ghost" href="#invites">看目前揪團</a>
           </div>
         </div>
-        <div class="hero-card" aria-label="熱門邀約預覽">
+        <div class="hero-card" aria-label="熱門時段預覽">
           <div class="hero-card__header">
             <span class="live-dot"></span>
-            <span>現在可以加入</span>
+            <span>今晚熱門時段</span>
           </div>
-          <p class="hero-card__topic">今晚一起來場 pastabe？</p>
-          <div class="avatars" aria-label="參加者">
-            <span>葉</span><span>米</span><span>達</span><span class="avatars__more">+2</span>
-          </div>
+          <p class="hero-card__topic" id="hero-tonight-title">整理中...</p>
+          <div class="avatars" id="hero-avatars" aria-label="參與者預覽"></div>
           <div class="hero-card__slot">
-            <small>最多人可以</small>
-            <strong>19:00 - 21:00</strong>
+            <small>最多人可加入</small>
+            <strong id="hero-best-slot">--</strong>
           </div>
         </div>
+      </section>
+
+      <section class="tonight-panel" aria-labelledby="tonight-title">
+        <div>
+          <span class="eyebrow">TONIGHT</span>
+          <h2 id="tonight-title">今晚開的團</h2>
+        </div>
+        <div class="tonight-list" id="tonight-list"></div>
       </section>
 
       <section class="lobby" id="invites">
         <div class="section-head">
           <div>
             <span class="eyebrow">LOBBY</span>
-            <h2>最近的邀約</h2>
+            <h2>揪團大廳</h2>
           </div>
-          <div class="filters" aria-label="篩選邀約">
-            <button class="filter is-active" data-filter="upcoming">近期場次</button>
+          <div class="filters" aria-label="篩選揪團">
+            <button class="filter is-active" data-filter="upcoming">現在可以加入</button>
+            <button class="filter" data-filter="tonight">今晚開的團</button>
             <button class="filter" data-filter="all">全部</button>
           </div>
         </div>
@@ -87,40 +95,49 @@
     <template id="new-template">
       <section class="form-page">
         <div class="form-page__intro">
-          <a class="back-link" href="#/">← 返回大廳</a>
+          <a class="back-link" href="#/">返回大廳</a>
           <span class="eyebrow">NEW INVITATION</span>
-          <h1>發起 Play 邀約</h1>
-          <p>填好你想玩的遊戲與可行時間，發布後就能把連結丟給朋友。</p>
+          <h1>開一個新團</h1>
+          <p>先丟出幾個你可以的時間，朋友加入後，頁面會自動統計哪些時段最多人能玩。</p>
           <aside class="tip-card">
-            <strong>小提醒</strong>
-            <p>多放幾個時間選項，朋友更容易找到大家都可以的時間。</p>
+            <strong>資料同步提醒</strong>
+            <p>目前預設會存在這台裝置。若填入 Supabase 設定，朋友在不同設備打開同一個頁面也會看到最新資料。</p>
           </aside>
         </div>
+
         <form class="create-form card" id="create-form">
           <label class="field field--full">
-            <span>Play 邀約主題 <b>*</b></span>
-            <input name="title" required maxlength="50" value="今晚跟我玩嗎？" />
+            <span>團名 <b>*</b></span>
+            <input name="title" required maxlength="50" value="今晚有人要一起玩嗎？" />
           </label>
           <label class="field">
-            <span>發起人暱稱 <b>*</b></span>
-            <input name="host" required maxlength="18" placeholder="例如：阿葉" />
+            <span>開團的人 <b>*</b></span>
+            <input name="host" required maxlength="18" placeholder="你的暱稱" />
           </label>
           <label class="field">
             <span>遊戲 <b>*</b></span>
-            <input name="game" required list="games" placeholder="選擇或輸入遊戲名稱" />
-            <datalist id="games">
-              <option value="pastabe"></option>
-              <option value="傳說對決"></option>
-              <option value="Pokemon Unite"></option>
-              <option value="崩壞：星穹鐵道"></option>
-            </datalist>
+            <span class="select-wrap">
+              <select name="game" id="game-select" required>
+                <option value="" disabled selected>選一款遊戲</option>
+                <option value="pastabe">pastabe</option>
+                <option value="英雄聯盟">英雄聯盟</option>
+                <option value="Pokemon Unite">Pokemon Unite</option>
+                <option value="雀魂">雀魂</option>
+                <option value="Valorant">Valorant</option>
+                <option value="其他">其他遊戲</option>
+              </select>
+            </span>
+          </label>
+          <label class="field field--hidden" id="custom-game-field">
+            <span>其他遊戲名稱 <b>*</b></span>
+            <input name="customGame" maxlength="24" placeholder="輸入遊戲名稱" />
           </label>
           <label class="field field--full">
             <span>日期 <b>*</b></span>
             <input name="date" id="event-date" type="date" required />
           </label>
           <fieldset class="slot-field field--full">
-            <legend>可以玩的時間 <b>*</b></legend>
+            <legend>可以玩的時段 <b>*</b></legend>
             <div class="slot-options" id="slot-options">
               <label class="slot-choice"><input type="checkbox" name="slots" value="18:00 - 19:00" /><span>18:00 - 19:00</span></label>
               <label class="slot-choice"><input type="checkbox" name="slots" value="19:00 - 21:00" checked /><span>19:00 - 21:00</span></label>
@@ -128,41 +145,41 @@
               <label class="slot-choice"><input type="checkbox" name="slots" value="22:00 之後" checked /><span>22:00 之後</span></label>
             </div>
             <div class="custom-slot">
-              <input id="custom-slot" maxlength="25" placeholder="新增自訂時段，例如 23:30 後" />
+              <input id="custom-slot" maxlength="25" placeholder="新增時段，例如 23:30 之後" />
               <button class="button button--secondary button--small" id="add-slot" type="button">加入</button>
             </div>
             <p class="error" id="slot-error"></p>
           </fieldset>
           <label class="field field--full">
             <span>備註</span>
-            <textarea name="note" rows="3" maxlength="160" placeholder="例如：歡樂場，麥克風自由開～"></textarea>
+            <textarea name="note" rows="3" maxlength="160" placeholder="例如：Discord 集合、缺補位、輕鬆玩"></textarea>
           </label>
-          <button class="button button--primary button--wide" type="submit">發布邀約</button>
+          <button class="button button--primary button--wide" type="submit">送出揪團</button>
         </form>
       </section>
     </template>
 
     <template id="detail-template">
       <section class="detail-page">
-        <a class="back-link" href="#/">← 返回揪團大廳</a>
+        <a class="back-link" href="#/">返回揪團大廳</a>
         <div class="detail-layout">
           <article class="invitation card" id="invitation"></article>
           <section class="join-card card">
             <span class="eyebrow">JOIN THIS PLAY</span>
-            <h2>我也想玩</h2>
+            <h2>加入這團</h2>
             <form id="join-form">
               <label class="field field--full">
                 <span>你的暱稱 <b>*</b></span>
-                <input required name="nickname" maxlength="18" placeholder="怎麼稱呼你？" />
+                <input required name="nickname" maxlength="18" placeholder="朋友看得到的名字" />
               </label>
               <fieldset class="slot-field field--full">
-                <legend>你可以的時間 <b>*</b></legend>
+                <legend>你可以的時段 <b>*</b></legend>
                 <div class="join-options" id="join-options"></div>
                 <p class="error" id="join-error"></p>
               </fieldset>
               <label class="field field--full">
-                <span>想說的話</span>
-                <input name="message" maxlength="60" placeholder="例如：我晚點上線" />
+                <span>留言</span>
+                <input name="message" maxlength="60" placeholder="例如：我會晚一點、可以補位" />
               </label>
               <button class="button button--primary button--wide" type="submit">送出我的時間</button>
             </form>
