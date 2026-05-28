@@ -71,6 +71,8 @@ const SUPABASE_ANON_KEY = "你的 anon public key";
 
 ## 管理模式
 
-右上角齒輪可以進入管理模式，預設密碼在 `app.js` 的 `ADMIN_PASSWORD`。這是方便私人小圈圈使用的前台管理，不是嚴格資安用途。
+右上角人頭圖示可以進入管理模式，預設密碼是 `0000`，也可以在 `app.js` 的 `ADMIN_PASSWORD` 修改。這是方便私人小圈圈使用的前台管理，不是嚴格資安用途。
 
 若要在前台刪除整團，請在 Supabase SQL Editor 跑一次 `supabase-delete-policy.sql`。
+
+管理模式也可以直接點首頁文字修改，使用上一步/下一步調整，最後按儲存才會同步；也能上傳 Logo 圖片。Logo 建議使用正方形 `512 x 512 px` 的 PNG、JPG 或 WebP。

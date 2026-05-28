@@ -76,6 +76,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 18px;
 }
 
 .brand {
@@ -85,6 +86,7 @@ button {
 }
 
 .brand__icon {
+  overflow: hidden;
   display: grid;
   place-items: center;
   width: 42px;
@@ -95,16 +97,15 @@ button {
   font: 700 15px "Outfit", Arial, sans-serif;
 }
 
+.brand__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .brand strong {
   display: block;
   font: 800 25px "Outfit", Arial, sans-serif;
-}
-
-.brand small {
-  display: block;
-  margin-top: -3px;
-  color: var(--muted);
-  font-size: 12px;
 }
 
 .nav {
@@ -121,6 +122,40 @@ button {
 .nav__link:hover,
 .back-link:hover {
   color: var(--purple);
+}
+
+.logo-upload {
+  display: none;
+  min-height: 42px;
+  padding: 6px 12px;
+  border: 1px dashed #cfc4ff;
+  border-radius: 8px;
+  color: #5134c7;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.logo-upload small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.logo-upload.is-visible {
+  display: block;
+}
+
+.nav-tools {
+  padding: 6px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid #d8ccff;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 10px 24px rgba(77, 45, 222, 0.08);
 }
 
 .admin-trigger {
@@ -148,6 +183,65 @@ button {
   color: #fff;
   border-color: var(--purple);
   background: var(--purple);
+}
+
+.admin-mode-label {
+  display: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: #5134c7;
+  background: var(--purple-soft);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-mode-label.is-visible {
+  display: inline-flex;
+}
+
+.edit-tool,
+.edit-save {
+  min-height: 38px;
+  padding: 0 12px;
+  display: none;
+  border: 0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.edit-tool {
+  color: #5134c7;
+  background: var(--purple-soft);
+}
+
+.edit-save {
+  color: #fff;
+  background: var(--purple-dark);
+}
+
+.edit-tool.is-visible,
+.edit-save.is-visible {
+  display: inline-flex;
+  align-items: center;
+}
+
+.edit-tool:disabled,
+.edit-save:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.inline-editable {
+  border-radius: 8px;
+  outline: 2px dashed rgba(107, 69, 255, 0.28);
+  outline-offset: 4px;
+}
+
+.inline-editable:focus {
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(107, 69, 255, 0.12);
+  outline: 2px solid var(--purple);
 }
 
 .app {
@@ -204,7 +298,7 @@ button {
 }
 
 .eyebrow {
-  display: block;
+  display: none;
   margin-bottom: 14px;
   color: var(--purple);
   font: 700 12px "Outfit", Arial, sans-serif;
@@ -225,7 +319,7 @@ button {
 
 .hero h1 {
   margin: 0 0 20px;
-  color: #131520;
+  color: var(--purple);
   font-size: clamp(48px, 6vw, 66px);
   line-height: 1.12;
   letter-spacing: 0;
@@ -604,6 +698,21 @@ button {
 .join-link {
   color: var(--purple);
   font-weight: 700;
+}
+
+.card-actions {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.edit-link {
+  padding: 5px 9px;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--purple);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .empty {
@@ -1141,10 +1250,24 @@ select:focus {
 }
 
 .footer {
-  padding: 0 20px 32px;
+  padding: 18px 20px 36px;
   color: #8c8f9d;
   text-align: center;
   font-size: 13px;
+}
+
+.footer strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--purple);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.footer p {
+  max-width: 760px;
+  margin: 0 auto;
+  line-height: 1.7;
 }
 
 @media (max-width: 920px) {
@@ -1190,17 +1313,32 @@ select:focus {
 
 @media (max-width: 620px) {
   .topbar {
-    height: 70px;
+    min-height: 70px;
+    height: auto;
     padding: 0 18px;
+    flex-wrap: wrap;
+    gap: 10px;
   }
 
   .brand strong {
     font-size: 21px;
   }
 
-  .brand small,
   .nav__link {
     display: none;
+  }
+
+  .logo-upload {
+    order: 3;
+    width: 100%;
+  }
+
+  .nav {
+    gap: 8px;
+  }
+
+  .nav-tools {
+    padding: 4px;
   }
 
   .app {

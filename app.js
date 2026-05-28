@@ -3,7 +3,27 @@ const STORAGE_KEY = "play-one-invites-v2";
 const SUPABASE_URL = "https://gvzqhwnjuxmnoayytytz.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_Cer_OmdZcW97rJwSXPhs-Q_gXI8woLj";
 const SUPABASE_TABLE = "play_one_invites";
-const ADMIN_PASSWORD = "playone-admin";
+const SETTINGS_KEY = "play-one-site-copy-v1";
+const SETTINGS_TABLE = "website_settings";
+const ADMIN_PASSWORD = "0000";
+
+const defaultCopy = {
+  brandIcon: "P1",
+  logoImage: "",
+  brandName: "Play One?!",
+  navLobby: "點我到大廳",
+  newButton: "+ 開新團",
+  heroTitle: "今天玩什麼???",
+  heroText: "大家時間都不一定，所以有了這個小平台，來幫忙彙整時間！希望大家都有愉快的遊戲時光～",
+  heroPrimary: "開一個新團",
+  heroSecondary: "看目前揪團",
+  heroCardLabel: "今晚熱門時段",
+  heroCardSmall: "最多人可加入",
+  tonightTitle: "今晚開的團",
+  lobbyTitle: "揪團大廳",
+  adminNote: "管理員小嘮叨：這個網頁是我自己和 AI 摸索做的，如果哪裡有 bug 請隨時跟我說～我再改！",
+  footerSlogan: "友善玩樂，心平氣和",
+};
 
 const seedInvites = [
   {
@@ -50,6 +70,11 @@ let toastTimer;
 let lobbyRefreshTimer;
 let activeLobbyFilter = "upcoming";
 let adminMode = sessionStorage.getItem("play-one-admin") === "true";
+let siteCopy = clone(defaultCopy);
+let draftCopy = clone(defaultCopy);
+let copyHistory = [];
+let copyFuture = [];
+let hasUnsavedCopy = false;
 
 const remoteEnabled = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
@@ -130,6 +155,76 @@ const store = {
   },
 };
 
+const settingsStore = {
+  async load() {
+    const local = localStorage.getItem(SETTINGS_KEY);
+    if (local) {
+      try {
+        siteCopy = normalizeSiteCopy({ ...defaultCopy, ...JSON.parse(local) });
+        draftCopy = clone(siteCopy);
+      } catch {
+        siteCopy = clone(defaultCopy);
+        draftCopy = clone(siteCopy);
+      }
+    }
+
+    if (!remoteEnabled) return siteCopy;
+
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/${SETTINGS_TABLE}?id=eq.1&select=data`, {
+        headers: supabaseHeaders(),
+      });
+      if (!response.ok) throw new Error("Settings load failed");
+      const rows = await response.json();
+      const remoteCopy = rows[0]?.data?.playOneCopy;
+      if (remoteCopy) {
+        siteCopy = normalizeSiteCopy({ ...defaultCopy, ...remoteCopy });
+        draftCopy = clone(siteCopy);
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(siteCopy));
+      }
+    } catch (error) {
+      console.warn(error);
+    }
+    return siteCopy;
+  },
+
+  async save(nextCopy) {
+    siteCopy = normalizeSiteCopy({ ...defaultCopy, ...nextCopy });
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(siteCopy));
+
+    if (!remoteEnabled) return;
+
+    try {
+      const currentResponse = await fetch(`${SUPABASE_URL}/rest/v1/${SETTINGS_TABLE}?id=eq.1&select=data`, {
+        headers: supabaseHeaders(),
+      });
+      if (!currentResponse.ok) throw new Error("Settings read before save failed");
+      const rows = await currentResponse.json();
+      const data = { ...(rows[0]?.data || {}), playOneCopy: siteCopy };
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/${SETTINGS_TABLE}?id=eq.1`, {
+        method: "PATCH",
+        headers: { ...supabaseHeaders(), Prefer: "return=minimal" },
+        body: JSON.stringify({ data }),
+      });
+      if (!response.ok) throw new Error("Settings save failed");
+    } catch (error) {
+      console.warn(error);
+      showToast("文字已存在本機，雲端同步失敗");
+    }
+  },
+};
+
+function normalizeSiteCopy(copy) {
+  const next = { ...copy };
+  if (next.navLobby === "大廳") next.navLobby = defaultCopy.navLobby;
+  if (next.heroTitle === "今天玩什麼，") next.heroTitle = defaultCopy.heroTitle;
+  if (next.heroAccent === "一眼就知道。") next.heroAccent = "";
+  if (next.heroText === "開團、選時段、收朋友回覆。大廳會依台灣時間把現在可加入、快開始、今晚稍晚的團排好。") {
+    next.heroText = defaultCopy.heroText;
+  }
+  return next;
+}
+
 function supabaseHeaders() {
   return {
     apikey: SUPABASE_ANON_KEY,
@@ -188,6 +283,7 @@ async function route() {
 function useTemplate(name) {
   const app = document.querySelector("#app");
   app.replaceChildren(document.querySelector(`#${name}`).content.cloneNode(true));
+  applySiteCopy();
 }
 
 function showToast(text) {
@@ -200,14 +296,27 @@ function showToast(text) {
 
 function setupAdminButton() {
   const button = document.querySelector("#admin-button");
+  const label = document.querySelector("#admin-mode-label");
+  const logoUpload = document.querySelector("#logo-upload-button");
   if (!button) return;
 
   button.classList.toggle("is-active", adminMode);
+  label?.classList.toggle("is-visible", adminMode);
+  logoUpload?.classList.toggle("is-visible", adminMode);
   button.addEventListener("click", () => {
     if (adminMode) {
+      if (hasUnsavedCopy && !confirm("還有未儲存的文字修改，要離開編輯模式嗎？")) {
+        return;
+      }
       adminMode = false;
       sessionStorage.removeItem("play-one-admin");
+      draftCopy = clone(siteCopy);
+      copyHistory = [];
+      copyFuture = [];
+      hasUnsavedCopy = false;
       button.classList.remove("is-active");
+      label?.classList.remove("is-visible");
+      logoUpload?.classList.remove("is-visible");
       showToast("已離開管理模式");
       route();
       return;
@@ -216,8 +325,14 @@ function setupAdminButton() {
     const password = prompt("請輸入管理密碼");
     if (password === ADMIN_PASSWORD) {
       adminMode = true;
+      draftCopy = clone(siteCopy);
+      copyHistory = [];
+      copyFuture = [];
+      hasUnsavedCopy = false;
       sessionStorage.setItem("play-one-admin", "true");
       button.classList.add("is-active");
+      label?.classList.add("is-visible");
+      logoUpload?.classList.add("is-visible");
       showToast("已進入管理模式");
       route();
       return;
@@ -226,6 +341,143 @@ function setupAdminButton() {
     if (password !== null) {
       showToast("管理密碼不正確");
     }
+  });
+}
+
+function setupLogoUpload() {
+  const button = document.querySelector("#logo-upload-button");
+  const input = document.querySelector("#logo-upload-input");
+  if (!button || !input) return;
+
+  button.classList.toggle("is-visible", adminMode);
+  button.addEventListener("click", () => input.click());
+  input.addEventListener("change", async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      showToast("請選擇圖片檔");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.addEventListener("load", async () => {
+      await settingsStore.save({ ...siteCopy, logoImage: reader.result });
+      draftCopy = clone(siteCopy);
+      hasUnsavedCopy = false;
+      applySiteCopy();
+      showToast("Logo 已更新");
+      input.value = "";
+    });
+    reader.readAsDataURL(file);
+  });
+}
+
+function applySiteCopy() {
+  document.querySelectorAll("[data-copy]").forEach((node) => {
+    const key = node.dataset.copy;
+    const source = adminMode ? draftCopy : siteCopy;
+    if (key && source[key] !== undefined) {
+      if (key === "brandIcon" && source.logoImage) {
+        node.innerHTML = `<img src="${escapeAttribute(source.logoImage)}" alt="" />`;
+      } else {
+        node.textContent = source[key];
+      }
+    }
+  });
+  document.querySelector("#admin-mode-label")?.classList.toggle("is-visible", adminMode);
+  document.querySelector("#logo-upload-button")?.classList.toggle("is-visible", adminMode);
+  updateEditToolbar();
+  updateFavicon();
+}
+
+function updateFavicon() {
+  const favicon = document.querySelector('link[rel="icon"]');
+  if (!favicon) return;
+  favicon.setAttribute("href", (adminMode ? draftCopy.logoImage : siteCopy.logoImage) || "favicon.svg");
+}
+
+function setDraftCopy(nextDraft, { pushHistory = true } = {}) {
+  if (pushHistory) {
+    copyHistory.push(clone(draftCopy));
+    copyFuture = [];
+  }
+  draftCopy = normalizeSiteCopy({ ...defaultCopy, ...nextDraft });
+  hasUnsavedCopy = JSON.stringify(draftCopy) !== JSON.stringify(siteCopy);
+  applySiteCopy();
+}
+
+function setupEditToolbar() {
+  document.querySelector("#undo-copy")?.addEventListener("click", () => {
+    if (!copyHistory.length) return;
+    copyFuture.push(clone(draftCopy));
+    draftCopy = copyHistory.pop();
+    hasUnsavedCopy = JSON.stringify(draftCopy) !== JSON.stringify(siteCopy);
+    applySiteCopy();
+  });
+
+  document.querySelector("#redo-copy")?.addEventListener("click", () => {
+    if (!copyFuture.length) return;
+    copyHistory.push(clone(draftCopy));
+    draftCopy = copyFuture.pop();
+    hasUnsavedCopy = JSON.stringify(draftCopy) !== JSON.stringify(siteCopy);
+    applySiteCopy();
+  });
+
+  document.querySelector("#save-copy")?.addEventListener("click", async () => {
+    if (!hasUnsavedCopy) return;
+    await settingsStore.save(draftCopy);
+    draftCopy = clone(siteCopy);
+    copyHistory = [];
+    copyFuture = [];
+    hasUnsavedCopy = false;
+    applySiteCopy();
+    showToast("已儲存編輯");
+  });
+}
+
+function updateEditToolbar() {
+  const undo = document.querySelector("#undo-copy");
+  const redo = document.querySelector("#redo-copy");
+  const save = document.querySelector("#save-copy");
+  [undo, redo, save].forEach((button) => button?.classList.toggle("is-visible", adminMode));
+  if (undo) undo.disabled = !adminMode || !copyHistory.length;
+  if (redo) redo.disabled = !adminMode || !copyFuture.length;
+  if (save) {
+    save.disabled = !adminMode || !hasUnsavedCopy;
+    save.textContent = hasUnsavedCopy ? "儲存*" : "儲存";
+  }
+}
+
+function enableInlineCopyEditing() {
+  document.querySelectorAll("[data-copy]").forEach((node) => {
+    const key = node.dataset.copy;
+    if (!key || node.dataset.inlineReady === "true") return;
+    if (key === "brandIcon" && siteCopy.logoImage) return;
+
+    node.dataset.inlineReady = "true";
+    node.classList.add("inline-editable");
+    node.setAttribute("contenteditable", "true");
+    node.setAttribute("spellcheck", "false");
+    node.setAttribute("title", "點一下直接改文字，離開後自動儲存");
+
+    node.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        node.blur();
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        node.textContent = draftCopy[key];
+        node.blur();
+      }
+    });
+
+    node.addEventListener("blur", async () => {
+      const value = node.textContent.trim() || defaultCopy[key];
+      if (value === draftCopy[key]) return;
+      setDraftCopy({ ...draftCopy, [key]: value });
+      showToast("已暫存，記得按儲存");
+    });
   });
 }
 
@@ -363,8 +615,9 @@ function sortedInvites(invites, filter) {
   return invites
     .filter((invite) => {
       if (filter === "all") return true;
-      if (filter === "tonight") return invite.date === todayIso();
-      return inviteStatus(invite).rank < 4;
+      const status = inviteStatus(invite);
+      if (filter === "tonight") return invite.date === todayIso() && status.rank < 4;
+      return status.rank <= 1;
     })
     .sort((a, b) => {
       const statusA = inviteStatus(a);
@@ -382,6 +635,7 @@ async function renderLobby() {
   useTemplate("lobby-template");
   const invites = await store.list();
 
+  renderCopyEditor();
   renderTonight(invites);
   renderCards(invites, activeLobbyFilter);
 
@@ -403,6 +657,11 @@ async function renderLobby() {
       renderCards(freshInvites, activeLobbyFilter);
     }
   }, 60 * 1000);
+}
+
+function renderCopyEditor() {
+  if (!adminMode) return;
+  enableInlineCopyEditing();
 }
 
 function renderTonight(invites) {
@@ -443,7 +702,7 @@ function renderTonight(invites) {
           <a class="tonight-item" href="#/invite/${encodeURIComponent(invite.id)}">
             <span class="game-pill">${escapeHtml(invite.game)}</span>
             <strong>${escapeHtml(invite.title)}</strong>
-            <small>${best.map(({ slot, count }) => `${escapeHtml(slot)} / ${count} 人`).join("、") || "等朋友填時間"}</small>
+            <small>${best.map(({ slot, count }) => `${escapeHtml(slot)} / ${count} 人`).join("、") || "等朋友填時間"}${adminMode ? " / 編輯" : ""}</small>
           </a>
         `;
       })
@@ -455,7 +714,11 @@ function renderCards(invites, filter) {
   const grid = document.querySelector("#invite-grid");
   const filteredInvites = sortedInvites(invites, filter);
   if (!filteredInvites.length) {
-    grid.innerHTML = '<p class="empty">目前沒有符合條件的團，開一個新的吧。</p>';
+    const emptyText =
+      filter === "upcoming"
+        ? "現在沒有正在進行或快開始的團。可以切到今晚開的團看看。"
+        : "目前沒有符合條件的團，開一個新的吧。";
+    grid.innerHTML = `<p class="empty">${emptyText}</p>`;
     return;
   }
 
@@ -487,7 +750,10 @@ function renderCards(invites, filter) {
           </div>
           <div class="invite-card__footer">
             <span>${invite.participants.length} 人已回覆</span>
-            <a class="join-link" href="#/invite/${encodeURIComponent(invite.id)}">加入這團</a>
+            <span class="card-actions">
+              ${adminMode ? `<a class="edit-link" href="#/invite/${encodeURIComponent(invite.id)}">編輯</a>` : ""}
+              <a class="join-link" href="#/invite/${encodeURIComponent(invite.id)}">加入這團</a>
+            </span>
           </div>
         </article>
       `;
@@ -630,9 +896,12 @@ function drawInvitation(invite) {
   const article = document.querySelector("#invitation");
   const counts = countsFor(invite);
   const max = Math.max(...counts.map(({ count }) => count), 1);
-  const people = invite.participants
+  const replyEntries = invite.participants
+    .map((person, index) => ({ person, index }))
+    .filter(({ person }) => !(person.nickname === invite.host || person.message === "團主大人"));
+  const people = replyEntries
     .map(
-      (person, index) => {
+      ({ person, index }) => {
         const isHost = person.nickname === invite.host || person.message === "團主大人";
         const visibleMessage = ["團主大人", "開團的人"].includes(person.message) ? "" : person.message;
         return `
@@ -674,7 +943,7 @@ function drawInvitation(invite) {
         .join("")}
     </section>
     <section class="people">
-      <h2>已回覆的人 (${invite.participants.length})</h2>
+      <h2>已回覆的人 (${replyEntries.length})</h2>
       ${people || '<p class="empty empty--compact">還沒有人回覆。</p>'}
     </section>
     ${adminMode ? renderAdminPanel(invite) : ""}
@@ -762,7 +1031,11 @@ function bindAdminTools(invites, invite) {
   });
 
   document.querySelector("#delete-invite")?.addEventListener("click", async () => {
-    if (!confirm("確定要刪除整個揪團嗎？這個動作不能復原。")) return;
+    const typed = prompt(`這會刪除「${invite.title}」整個揪團，不能復原。\n請輸入「刪除」才會繼續。`);
+    if (typed !== "刪除") {
+      showToast("已取消刪除");
+      return;
+    }
 
     try {
       await store.remove(invite.id);
@@ -820,7 +1093,11 @@ function escapeAttribute(value) {
 }
 
 window.addEventListener("hashchange", route);
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
+  await settingsStore.load();
+  applySiteCopy();
+  setupLogoUpload();
+  setupEditToolbar();
   setupAdminButton();
   route();
 });

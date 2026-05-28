@@ -14,6 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800&family=Outfit:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
     <script src="app.js" defer></script>
   </head>
@@ -23,28 +24,39 @@
 
     <header class="topbar">
       <a class="brand" href="#/">
-        <span class="brand__icon" aria-hidden="true">P1</span>
+        <span class="brand__icon" id="brand-logo" data-copy="brandIcon" aria-hidden="true">P1</span>
         <span>
-          <strong>Play One?!</strong>
-          <small>朋友揪團時間板</small>
+          <strong data-copy="brandName">Play One?!</strong>
         </span>
       </a>
+      <button class="logo-upload" id="logo-upload-button" type="button">
+        上傳 Logo
+        <small>建議 512 x 512 px</small>
+      </button>
+      <input id="logo-upload-input" type="file" accept="image/png,image/jpeg,image/webp" hidden />
       <nav class="nav" aria-label="主要導覽">
-        <a class="nav__link" href="#/">大廳</a>
-        <button class="admin-trigger" id="admin-button" type="button" title="管理模式" aria-label="管理模式">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" />
-            <path d="M19.4 15a7.8 7.8 0 0 0 .06-1 7.8 7.8 0 0 0-.06-1l2.02-1.58-1.9-3.28-2.38.96a7.9 7.9 0 0 0-1.73-1L15.05 5h-3.8l-.36 3.1a7.9 7.9 0 0 0-1.73 1l-2.38-.96-1.9 3.28L6.9 13a7.8 7.8 0 0 0-.06 1c0 .34.02.68.06 1l-2.02 1.58 1.9 3.28 2.38-.96c.53.42 1.11.76 1.73 1l.36 3.1h3.8l.36-3.1c.62-.24 1.2-.58 1.73-1l2.38.96 1.9-3.28L19.4 15Z" />
-          </svg>
-        </button>
-        <a class="button button--primary button--small" href="#/new">+ 開新團</a>
+        <a class="nav__link" href="#/" data-copy="navLobby">大廳</a>
+        <div class="nav-tools">
+          <button class="admin-trigger" id="admin-button" type="button" title="管理模式" aria-label="管理模式">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+              <path d="M4.5 21a7.5 7.5 0 0 1 15 0" />
+            </svg>
+          </button>
+          <span class="admin-mode-label" id="admin-mode-label">編輯模式</span>
+          <button class="edit-tool" id="undo-copy" type="button" disabled>上一步</button>
+          <button class="edit-tool" id="redo-copy" type="button" disabled>下一步</button>
+          <button class="edit-save" id="save-copy" type="button" disabled>儲存</button>
+          <a class="button button--primary button--small" href="#/new" data-copy="newButton">+ 開新團</a>
+        </div>
       </nav>
     </header>
 
     <main id="app" class="app" aria-live="polite"></main>
 
     <footer class="footer">
-      <p>Play One?! demo version <span aria-hidden="true">/</span> 目前可接 Supabase 雲端同步</p>
+      <strong data-copy="footerSlogan">友善玩樂，心平氣和</strong>
+      <p data-copy="adminNote">管理員小嘮叨：這個網頁是我自己和 AI 摸索做的，如果哪裡有 bug 請隨時跟我說～我再改！</p>
     </footer>
 
     <div id="toast" class="toast" role="status" aria-live="assertive"></div>
@@ -52,23 +64,22 @@
     <template id="lobby-template">
       <section class="hero">
         <div class="hero__copy">
-          <span class="eyebrow">PLAY INVITATION</span>
-          <h1>今天玩什麼，<span>一眼就知道。</span></h1>
-          <p>開團、選時段、收朋友回覆。大廳會依台灣時間把現在可加入、快開始、今晚稍晚的團排好。</p>
+          <h1 data-copy="heroTitle">今天玩什麼???</h1>
+          <p data-copy="heroText">大家時間都不一定，所以有了這個小平台，來幫忙彙整時間！希望大家都有愉快的遊戲時光～</p>
           <div class="hero__actions">
-            <a class="button button--primary" href="#/new">開一個新團</a>
-            <a class="button button--ghost" href="#invites">看目前揪團</a>
+            <a class="button button--primary" href="#/new" data-copy="heroPrimary">開一個新團</a>
+            <a class="button button--ghost" href="#invites" data-copy="heroSecondary">看目前揪團</a>
           </div>
         </div>
         <div class="hero-card" aria-label="熱門時段預覽">
           <div class="hero-card__header">
             <span class="live-dot"></span>
-            <span>今晚熱門時段</span>
+            <span data-copy="heroCardLabel">今晚熱門時段</span>
           </div>
           <p class="hero-card__topic" id="hero-tonight-title">整理中...</p>
           <div class="avatars" id="hero-avatars" aria-label="參與者預覽"></div>
           <div class="hero-card__slot">
-            <small>最多人可加入</small>
+            <small data-copy="heroCardSmall">最多人可加入</small>
             <strong id="hero-best-slot">--</strong>
           </div>
         </div>
@@ -76,8 +87,7 @@
 
       <section class="tonight-panel" aria-labelledby="tonight-title">
         <div>
-          <span class="eyebrow">TONIGHT</span>
-          <h2 id="tonight-title">今晚開的團</h2>
+          <h2 id="tonight-title" data-copy="tonightTitle">今晚開的團</h2>
         </div>
         <div class="tonight-list" id="tonight-list"></div>
       </section>
@@ -85,13 +95,12 @@
       <section class="lobby" id="invites">
         <div class="section-head">
           <div>
-            <span class="eyebrow">LOBBY</span>
-            <h2>揪團大廳</h2>
+            <h2 data-copy="lobbyTitle">揪團大廳</h2>
           </div>
           <div class="filters" aria-label="篩選揪團">
-            <button class="filter is-active" data-filter="upcoming">現在可以加入</button>
-            <button class="filter" data-filter="tonight">今晚開的團</button>
-            <button class="filter" data-filter="all">全部</button>
+            <button class="filter is-active" type="button" data-filter="upcoming">現在可以加入</button>
+            <button class="filter" type="button" data-filter="tonight">今晚開的團</button>
+            <button class="filter" type="button" data-filter="all">全部</button>
           </div>
         </div>
         <div class="invite-grid" id="invite-grid"></div>
@@ -102,7 +111,6 @@
       <section class="form-page">
         <div class="form-page__intro">
           <a class="back-link" href="#/">返回大廳</a>
-          <span class="eyebrow">NEW INVITATION</span>
           <h1>開一個新團</h1>
           <p>先丟出幾個你可以的時間，朋友加入後，頁面會自動統計哪些時段最多人能玩。</p>
           <aside class="tip-card">
