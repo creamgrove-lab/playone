@@ -566,7 +566,7 @@ function inviteWindow(invite) {
 function inviteStatus(invite) {
   const now = taiwanDateParts();
   const window = inviteWindow(invite);
-  if (invite.date < now.date) return { label: "已結束", rank: 4, minutesUntil: Number.MAX_SAFE_INTEGER };
+  if (invite.date < now.date) return { label: "已過期", rank: 4, minutesUntil: Number.MAX_SAFE_INTEGER };
   if (invite.date > now.date) return { label: "即將到來", rank: 3, minutesUntil: Number.MAX_SAFE_INTEGER };
   if (now.minutes >= window.start && now.minutes <= window.end) {
     return { label: "現在可加入", rank: 0, minutesUntil: 0 };
@@ -579,7 +579,7 @@ function inviteStatus(invite) {
       minutesUntil,
     };
   }
-  return { label: "今晚已結束", rank: 4, minutesUntil: Number.MAX_SAFE_INTEGER };
+  return { label: "已過期", rank: 4, minutesUntil: Number.MAX_SAFE_INTEGER };
 }
 
 function countsFor(invite) {
@@ -616,6 +616,7 @@ function sortedInvites(invites, filter) {
     .filter((invite) => {
       if (filter === "all") return true;
       const status = inviteStatus(invite);
+      if (filter === "expired") return status.rank >= 4;
       if (filter === "tonight") return invite.date === todayIso() && status.rank < 4;
       return status.rank <= 1;
     })
@@ -717,6 +718,8 @@ function renderCards(invites, filter) {
     const emptyText =
       filter === "upcoming"
         ? "現在沒有正在進行或快開始的團。可以切到今晚開的團看看。"
+        : filter === "expired"
+        ? "目前沒有已過期的團。"
         : "目前沒有符合條件的團，開一個新的吧。";
     grid.innerHTML = `<p class="empty">${emptyText}</p>`;
     return;
@@ -727,12 +730,12 @@ function renderCards(invites, filter) {
       const best = bestSlots(invite);
       const status = inviteStatus(invite);
       return `
-        <article class="invite-card">
+        <article class="invite-card ${status.rank >= 4 ? "invite-card--expired" : ""}">
           <div class="invite-card__top">
-            <span class="game-pill">${escapeHtml(invite.game)}</span>
             <span class="status-badge status-badge--rank-${status.rank}">${escapeHtml(status.label)}</span>
           </div>
           <div class="date-badge">${formatDate(invite.date)}</div>
+          <div class="card-game-name">${escapeHtml(invite.game)}</div>
           <h3>${escapeHtml(invite.title)}</h3>
           <div class="host">
             <span class="host__avatar">${escapeHtml(invite.host.slice(0, 1))}</span>
@@ -752,7 +755,7 @@ function renderCards(invites, filter) {
             <span>${invite.participants.length} 人已回覆</span>
             <span class="card-actions">
               ${adminMode ? `<a class="edit-link" href="#/invite/${encodeURIComponent(invite.id)}">編輯</a>` : ""}
-              <a class="join-link" href="#/invite/${encodeURIComponent(invite.id)}">加入這團</a>
+              <a class="join-link" href="#/invite/${encodeURIComponent(invite.id)}">${status.rank >= 4 ? "查看紀錄" : "加入這團"}</a>
             </span>
           </div>
         </article>

@@ -100,6 +100,7 @@
           <div class="filters" aria-label="篩選揪團">
             <button class="filter is-active" type="button" data-filter="upcoming">現在可以加入</button>
             <button class="filter" type="button" data-filter="tonight">今晚開的團</button>
+            <button class="filter" type="button" data-filter="expired">已過期團</button>
             <button class="filter" type="button" data-filter="all">全部</button>
           </div>
         </div>
@@ -110,7 +111,7 @@
     <template id="new-template">
       <section class="form-page">
         <div class="form-page__intro">
-          <a class="back-link" href="#/">返回大廳</a>
+          <a class="back-link" href="#/">← 返回大廳</a>
           <h1>開一個新團</h1>
           <p>先丟出幾個你可以的時間，朋友加入後，頁面會自動統計哪些時段最多人能玩。</p>
           <aside class="tip-card">
@@ -122,7 +123,7 @@
         <form class="create-form card" id="create-form">
           <label class="field field--full">
             <span>團名 <b>*</b></span>
-            <input name="title" required maxlength="50" value="今晚有人要一起玩嗎？" />
+            <input name="title" required maxlength="50" placeholder="例如：今晚有人要一起玩嗎？" />
           </label>
           <label class="field">
             <span>團主大人 <b>*</b></span>
@@ -164,9 +165,9 @@
             <legend>可以玩的時段 <b>*</b></legend>
             <div class="slot-options" id="slot-options">
               <label class="slot-choice"><input type="checkbox" name="slots" value="18:00 - 19:00" /><span>18:00 - 19:00</span></label>
-              <label class="slot-choice"><input type="checkbox" name="slots" value="19:00 - 21:00" checked /><span>19:00 - 21:00</span></label>
+              <label class="slot-choice"><input type="checkbox" name="slots" value="19:00 - 20:00" checked /><span>19:00 - 20:00</span></label>
+              <label class="slot-choice"><input type="checkbox" name="slots" value="20:00 - 21:00" checked /><span>20:00 - 21:00</span></label>
               <label class="slot-choice"><input type="checkbox" name="slots" value="21:00 - 22:00" /><span>21:00 - 22:00</span></label>
-              <label class="slot-choice"><input type="checkbox" name="slots" value="22:00 之後" checked /><span>22:00 之後</span></label>
             </div>
             <div class="custom-slot">
               <input id="custom-slot" maxlength="25" placeholder="新增時段，例如 23:30 之後" />
@@ -185,7 +186,7 @@
 
     <template id="detail-template">
       <section class="detail-page">
-        <a class="back-link" href="#/">返回揪團大廳</a>
+        <a class="back-link" href="#/">← 返回揪團大廳</a>
         <div class="detail-layout">
           <article class="invitation card" id="invitation"></article>
           <section class="join-card card">
