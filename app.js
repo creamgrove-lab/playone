@@ -120,10 +120,9 @@ const store = {
   },
 
   async create(invite) {
-    const invites = localList();
-    localSave([...invites, invite]);
-
     if (!remoteEnabled) {
+      const invites = localList();
+      localSave([...invites, invite]);
       return invite;
     }
 
@@ -132,8 +131,15 @@ const store = {
       headers: { ...supabaseHeaders(), Prefer: "return=representation" },
       body: JSON.stringify(invite),
     });
-    if (!response.ok) throw new Error("Supabase create failed");
-    return normalizeInvite((await response.json())[0]);
+    const responseText = await response.text();
+    if (!response.ok) {
+      throw new Error(`Supabase create failed (${response.status}): ${responseText}`);
+    }
+    const rows = responseText ? JSON.parse(responseText) : [];
+    const savedInvite = normalizeInvite(rows[0] || invite);
+    const invites = localList().filter((entry) => entry.id !== savedInvite.id);
+    localSave([...invites, savedInvite]);
+    return savedInvite;
   },
 
   async update(invite) {
@@ -860,7 +866,11 @@ function renderNew() {
   useTemplate("new-template");
   const form = document.querySelector("#create-form");
   const date = document.querySelector("#event-date");
-  document.querySelector("#game-select").innerHTML = gameOptionsHtml();
+  const gameSelect = document.querySelector("#game-select");
+  gameSelect.innerHTML = gameOptionsHtml();
+  if (!gameSelect.value) {
+    gameSelect.value = gameGroups[0].options[0];
+  }
 
   date.value = todayIso();
   date.min = todayIso();
@@ -898,7 +908,17 @@ function renderNew() {
 
     error.textContent = "";
     const data = new FormData(form);
-    const game = data.get("customGame").trim() || data.get("game");
+    const title = String(data.get("title") || "").trim();
+    const host = String(data.get("host") || "").trim();
+    const customGame = String(data.get("customGame") || "").trim();
+    const selectedGame = String(data.get("game") || "").trim();
+    const game = customGame || selectedGame;
+    const note = String(data.get("note") || "").trim();
+    const eventDate = String(data.get("date") || "").trim();
+    if (!title || !host || !eventDate) {
+      error.textContent = "請把團名、團主大人和日期填好";
+      return;
+    }
     if (!game) {
       error.textContent = "請選一款遊戲 / 活動，或直接輸入名稱";
       return;
@@ -907,13 +927,13 @@ function renderNew() {
     const id = `play-${Date.now()}`;
     const invite = {
       id,
-      title: data.get("title").trim(),
-      host: data.get("host").trim(),
+      title,
+      host,
       game,
-      date: data.get("date"),
+      date: eventDate,
       slots: selectedSlots,
-      note: data.get("note").trim(),
-      participants: [{ nickname: data.get("host").trim(), slots: selectedSlots, message: "團主大人" }],
+      note,
+      participants: [{ nickname: host, slots: selectedSlots, message: "團主大人" }],
     };
 
     try {
@@ -922,7 +942,8 @@ function renderNew() {
       showToast(remoteEnabled ? "已同步到雲端" : "已存在這台裝置");
     } catch (error) {
       console.error(error);
-      showToast("送出失敗，請稍後再試");
+      document.querySelector("#slot-error").textContent = "建立失敗，雲端沒有寫入。請確認 Supabase 權限或稍後再試。";
+      showToast("建立失敗，雲端沒有寫入");
     }
   });
 }
